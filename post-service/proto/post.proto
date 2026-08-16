@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package post;
+
+option go_package = "github.com/mohamed/microservices/post-service/proto";
+
+
+// ============================
+// Post Service
+// ============================
+
+service PostService {
+    rpc GetAllPosts(Empty) returns (PostList);
+    rpc GetPostById(PostIdRequest) returns (Post);
+    rpc CreatePost(CreatePostRequest) returns (Post);
+    rpc DeletePost(PostIdRequest) returns (Empty);
+}
+
+// --- Employee Messages ---
+
+message Empty {}
+
+message Post {
+    int32 id = 1;
+    int32 user_id = 2;
+    string title = 3;
+    string description = 4;
+}
+
+message PostIdRequest {
+    int32 id = 1;
+}
+
+message CreatePostRequest {
+    int32 user_id = 1;
+    string title = 2;
+    string description = 3;
+}
+
+message PostList {
+  repeated Post posts = 1;
+}
