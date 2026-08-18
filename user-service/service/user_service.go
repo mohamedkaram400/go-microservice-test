@@ -38,3 +38,17 @@ func (s *UserService) GetAllUsers(
 		Users: s.users,
 	}, nil
 }
+
+func (s *UserService) GetUserById(
+	ctx context.Context,
+	req *pb.UserIdRequest,
+) (*pb.User, error) {
+
+	for _, user := range s.users {
+		if user.Id == req.Id {
+			return user, nil
+		}
+	}
+
+	return nil, nil
+}

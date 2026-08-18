@@ -1,0 +1,15 @@
+
+services:
+  user_service:
+    container_name: user-service
+  build:
+    context: ./user-service
+  ports:
+    - "50051:50051"
+
+  post_service:
+    container_name: post-service
+    build:
+      context: ./post-service
+    ports:
+      - "50052:50052"

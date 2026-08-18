@@ -17,11 +17,13 @@ func NewPostService() *PostService {
 		posts: []*pb.Post{
 			{
 				Id: 1,
+				UserId:      1,
 				Title: "title 1",
 				Description: "description 1",
 			},
 			{
-				Id: 1,
+				Id: 2,
+				UserId:      1,
 				Title: "title 2",
 				Description: "description 2",
 			},
@@ -29,7 +31,7 @@ func NewPostService() *PostService {
 	}
 }
 
-func (s *PostService) GetAllUsers(
+func (s *PostService) GetAllPosts(
 	ctx context.Context,
 	req *pb.Empty,
 ) (*pb.PostList, error) {
@@ -39,7 +41,7 @@ func (s *PostService) GetAllUsers(
 	}, nil
 }
 
-func (s *PostService) GetUserById(
+func (s *PostService) GetPostById(
 	ctx context.Context,
 	req *pb.PostIdRequest,
 ) (*pb.Post, error) {
