@@ -4,6 +4,8 @@ import (
 	"context"
 
 	pb "github.com/mohamed/microservices/user-service/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserService struct {
@@ -50,5 +52,9 @@ func (s *UserService) GetUserById(
 		}
 	}
 
-	return nil, nil
+	return nil, status.Errorf(
+		codes.NotFound,
+		"user with id %d not found",
+		req.Id,
+	)
 }
