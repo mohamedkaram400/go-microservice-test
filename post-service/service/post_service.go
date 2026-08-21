@@ -3,54 +3,51 @@ package service
 import (
 	"context"
 
+	"github.com/mohamed/microservices/post-service/dto"
+	"github.com/mohamed/microservices/post-service/entity"
 	pb "github.com/mohamed/microservices/post-service/proto"
+	"github.com/mohamed/microservices/post-service/repository"
 )
 
 type PostService struct {
+	postRepository *repository.PostRepository
 	pb.UnimplementedPostServiceServer
 
-	posts []*pb.Post
-}
+} 
 
-func NewPostService() *PostService {
+func NewPostService(postRepository *repository.PostRepository) *PostService {
 	return &PostService{
-		posts: []*pb.Post{
-			{
-				Id: 1,
-				UserId:      1,
-				Title: "title 1",
-				Description: "description 1",
-			},
-			{
-				Id: 2,
-				UserId:      1,
-				Title: "title 2",
-				Description: "description 2",
-			},
-		},
+		postRepository: postRepository,
 	}
 }
 
-func (s *PostService) GetAllPosts(
-	ctx context.Context,
-	req *pb.Empty,
-) (*pb.PostList, error) {
+func (s *PostService) GetAllPosts(ctx context.Context, req *pb.Empty) (*pb.PostList, error) {
 
-	return &pb.PostList{
-		Posts: s.posts,
-	}, nil
+	return nil, nil
 }
 
-func (s *PostService) GetPostById(
-	ctx context.Context,
-	req *pb.PostIdRequest,
-) (*pb.Post, error) {
+func (s *PostService) GetPostById(ctx context.Context, req *pb.PostIdRequest) (*pb.Post, error) {
 
-	for _, post := range s.posts {
-		if post.Id == req.Id {
-			return post, nil
-		}
+	return nil, nil
+}
+
+func (s *PostService) CreatePost(ctx context.Context, req dto.CreatePostRequest) (*entity.Post, error) {
+	
+	post := &entity.Post{
+		UserID: req.UserID,
+		Title: req.Title,
+		Description: req.Description,
 	}
+
+	err := s.postRepository.Create(ctx, post)
+	if err != nil {
+		return nil, err
+	}
+
+	return post, nil
+}
+
+func (s *PostService) DeletePost(ctx context.Context, req *pb.PostIdRequest) (*pb.Post, error) {
 
 	return nil, nil
 }

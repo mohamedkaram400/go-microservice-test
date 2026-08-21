@@ -13,3 +13,43 @@ services:
       context: ./post-service
     ports:
       - "50052:50052"
+
+  user_db:
+    image: mysql:8.0
+    container_name: user-db
+    ports:
+      - "3310:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    env_file:
+      - .env
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - expansion
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pqazwsx123"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  post_db:
+    image: mysql:8.0
+    container_name: post-db
+    ports:
+      - "3311:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    env_file:
+      - .env
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - expansion
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pqazwsx123"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
