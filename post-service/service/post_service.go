@@ -29,6 +29,7 @@ func (s *PostService) GetAllPosts(ctx context.Context, req *pb.Empty) ([]*entity
 }
 
 func (s *PostService) GetPostById(ctx context.Context, postId int) (*dto.PostResponse, error) {
+	
 	post, err := s.postRepository.GetPostById(ctx, postId)
 	if err != nil {
 		return nil, err
@@ -41,7 +42,10 @@ func (s *PostService) GetPostById(ctx context.Context, postId int) (*dto.PostRes
         },
     )
 
+	log.Printf("📤 Calling User Service: GetUserById(%d)", post.UserID)
+
 	if err != nil {
+		log.Printf("❌ User Service error: %v", err)
 		return nil, err
 	}
 

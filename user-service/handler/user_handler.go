@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 
 	"github.com/mohamed/microservices/user-service/dto"
 	userpb "github.com/mohamed/microservices/user-service/proto"
@@ -22,14 +23,24 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 
 func (h *UserHandler) GetUserById(ctx context.Context, req *userpb.UserIdRequest) (*userpb.User, error) {
 
+    log.Printf("📥 gRPC GetUserById: user_id=%d", req.Id)
+
     user, err := h.userService.GetUserById(
         ctx,
         int(req.Id),
     )
 
     if err != nil {
+        log.Printf("❌ GetUserById error: %v", err)
         return nil, err
     }
+
+    log.Printf(
+        "📤 gRPC GetUserById response: id=%d name=%s email=%s",
+        user.ID,
+        user.Name,
+        user.Email,
+    )
 
 	return &userpb.User{
         Id:    int32(user.ID),
