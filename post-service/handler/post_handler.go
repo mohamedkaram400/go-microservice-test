@@ -1,90 +1,63 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"github.com/mohamed/microservices/post-service/dto"
-	"github.com/mohamed/microservices/post-service/entity"
 	"github.com/mohamed/microservices/post-service/service"
-	userpb "github.com/mohamed/microservices/user-service/proto"
 )
 
 type PostHandler struct {
-	userClient userpb.UserServiceClient
 	postService *service.PostService
 }
 
-func NewPostHandler(userClient userpb.UserServiceClient, postService *service.PostService) *PostHandler {
+func NewPostHandler(postService *service.PostService) *PostHandler {
 	return &PostHandler{
-		userClient: userClient,
 		postService: postService,
 	}
 }
 
-func (h *PostHandler) GetAllPosts(w http.ResponseWriter, r *http.Request) {
-
+func (h *PostHandler) GetAllPosts(c *gin.Context) {
+	// posts, err := h.postService.GetAllPosts(c.Request.Context())
 }
 
-func (h *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
-	// Temporary hardcoded post.
-	// Later this will come from your Post database.
-	post := entity.Post{
-		ID:          1,
-		UserID:      1,
-		Title:       "My first post",
-		Description: "Hello from Post Service",
-	}
+func (h *PostHandler) GetPost(c *gin.Context) {
+	idStr := c.Param("id")
+	postID, _ := strconv.Atoi(idStr)
 
-	// Call User Service through gRPC.
-	user, err := h.userClient.GetUserById(
-		r.Context(),
-		&userpb.UserIdRequest{
-			Id: int32(post.UserID),
-		},
+	post, err := h.postService.GetPostById(
+		c.Request.Context(),
+		postID,
 	)
 
 	if err != nil {
-		http.Error(w, "failed to get user", http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	response := map[string]interface{}{
-		"id":          post.ID,
-		"title":       post.Title,
-		"description": post.Description,
-		"user": map[string]interface{}{
-			"id":    user.Id,
-			"name":  user.Name,
-			"email": user.Email,
-		},
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	c.JSON(http.StatusOK, post)
 }
 
-func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
+func (h *PostHandler) CreatePost(c *gin.Context) {
 		
 	var req dto.CreatePostRequest
 
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	post, err := h.postService.CreatePost(r.Context(), req)
+	post, err := h.postService.CreatePost(c.Request.Context(), req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(post)
+	c.JSON(http.StatusOK, post)
 }
 
-func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
+func (h *PostHandler) DeletePost(c *gin.Context) {
 
 }

@@ -2,8 +2,8 @@ package main
 
 import (
 	"log"
-	"net/http"
 
+	"github.com/gin-gonic/gin"
 	userpb "github.com/mohamed/microservices/user-service/proto"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -17,7 +17,7 @@ import (
 
 func main() {
     // ------------------------------------
-	// 1. Connect to User Service
+	// Connect to User Service
 	// ------------------------------------
 
 	conn, err := grpc.NewClient(
@@ -33,8 +33,9 @@ func main() {
 
 	defer conn.Close()
 
-
+    // ------------------------------------
 	// Connect to DB
+    // ------------------------------------
 	mysql, err := dbconn.ConnectMySQL("root:qazwsx123@tcp(localhost:3306)/post_service?charset=utf8mb4&parseTime=True&loc=Local")
 	if err != nil {
 		log.Fatal(err)
@@ -44,36 +45,44 @@ func main() {
 	if err != nil {
 		log.Fatal("❌ Failed to get sql.DB: ", err)
 	}
+
+	defer sqlDB.Close()
+
     // ------------------------------------
-	// 2. Create User Service gRPC client
+	// Create User Service gRPC client
 	// ------------------------------------
 
 	userClient := userpb.NewUserServiceClient(conn)
 
 	// ------------------------------------
-	// 3. Create Post Handler, Service, and Repository
+	// Create Post Handler, Service, and Repository
 	// ------------------------------------
 
-	postRepository := repository.NewPostRepository(sqlDB)
-	postService := service.NewPostService(postRepository)
-	postHandler := handler.NewPostHandler(userClient, postService)
+	postRepository := repository.NewPostRepository(mysql)
+	postService := service.NewPostService(postRepository, userClient)
+	postHandler := handler.NewPostHandler(postService)
 
     // ------------------------------------
-	// 4. Register REST endpoint
+	// Register REST endpoint
 	// ------------------------------------
 
-	http.HandleFunc("/posts/", postHandler.GetAllPosts)
-	http.HandleFunc("/posts/:id", postHandler.GetPost)
-	http.HandleFunc("/posts", postHandler.CreatePost)
-	http.HandleFunc("/posts/:id", postHandler.DeletePost)
+	router := gin.Default()
+	router.SetTrustedProxies(nil)
+	router.Use(gin.Logger(), gin.Recovery())
+
+	// 7. Versioned API group
+	v1 := router.Group("/api/v1")
+
+	v1.GET("/get-post/:id", postHandler.GetPost)
+	v1.POST("/create-post", postHandler.CreatePost)
 
 	// ------------------------------------
-	// 5. Start REST server
+	// Start REST server
 	// ------------------------------------
 
 	log.Println("Post Service REST running on :8082")
 
-	if err := http.ListenAndServe(":8082", nil); err != nil {
+	if err := router.Run(":8082"); err != nil {
 		log.Fatal(err)
 	}
 }

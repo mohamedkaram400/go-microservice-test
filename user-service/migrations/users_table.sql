@@ -1,7 +1,5 @@
 
 
-USE user_service;
-
 CREATE TABLE users (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,

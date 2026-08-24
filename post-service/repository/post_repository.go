@@ -2,52 +2,42 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/mohamed/microservices/post-service/entity"
+	"gorm.io/gorm"
 )
 
 type PostRepository struct {
-    db *sql.DB
+    db *gorm.DB
 }
 
-func NewPostRepository(db *sql.DB) *PostRepository {
+func NewPostRepository(db *gorm.DB) *PostRepository {
     return &PostRepository{
         db: db,
     }
 }
 
-func (r *PostRepository) GetAllPosts(ctx context.Context) (error) {
-    
-    return nil
+func (r *PostRepository) GetAllPosts(ctx context.Context) ([]*entity.Post, error) {
+    var posts []*entity.Post
+    if err := r.db.WithContext(ctx).Find(&posts).Error; err != nil {
+        return nil, err
+    }
+
+    return posts, nil
 }
 
-func (r *PostRepository) GetPostById(ctx context.Context, postId int) (error) {
+func (r *PostRepository) GetPostById(ctx context.Context, postId int) (*entity.Post, error) {
+    var post entity.Post
 
-    return nil
+    if err := r.db.WithContext(ctx).Where("id = ?", postId).First(&post).Error; err != nil { 
+        return nil, err
+    }
+    return &post, nil
 }
 
 func (r *PostRepository) Create(ctx context.Context, post *entity.Post) (error) {
-    query := `
-        INSERT INTO posts (
-            user_id,
-            title, 
-            description,
-            created_at,
-            updated_at
-        )
-        VALUES (?, ?, ?, NOW(), NOW())
-    `
 
-    _, err := r.db.ExecContext(
-        ctx, 
-        query, 
-        post.UserID,
-        post.Title,
-        post.Description,
-    )
-
-    if err != nil {
+    if err := r.db.WithContext(ctx).Create(post).Error; err != nil {
         return err
     }
 
@@ -56,5 +46,8 @@ func (r *PostRepository) Create(ctx context.Context, post *entity.Post) (error) 
 
 func (r *PostRepository) Delete(ctx context.Context, postId int) (error) {
 
+    if err := r.db.WithContext(ctx).Where("id = ?", postId).Delete(&entity.Post{}).Error; err != nil { 
+        return err
+    }
     return nil
 }

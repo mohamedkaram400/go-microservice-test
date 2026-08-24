@@ -3,58 +3,35 @@ package service
 import (
 	"context"
 
-	pb "github.com/mohamed/microservices/user-service/proto"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/mohamed/microservices/user-service/dto"
+	"github.com/mohamed/microservices/user-service/entity"
+	"github.com/mohamed/microservices/user-service/repository"
 )
 
 type UserService struct {
-	pb.UnimplementedUserServiceServer
-
-	users []*pb.User
+    userRepository *repository.UserRepository
 }
 
-func NewUserService() *UserService {
+func NewUserService(userRepository *repository.UserRepository) *UserService {
 	return &UserService{
-		users: []*pb.User{
-			{
-				Id: 1,
-				Name: "Ali",
-				Email: "ali@gmail.com",
-			},
-			{
-				Id: 1,
-				Name: "Ahmed",
-				Email: "ahmed@gmail.com",
-			},
-		},
+		userRepository: userRepository,
 	}
 }
 
-func (s *UserService) GetAllUsers(
-	ctx context.Context,
-	req *pb.Empty,
-) (*pb.UserList, error) {
+func (s *UserService) CreateUser(ctx context.Context, req dto.CreateUserRequest) (*entity.User, error) {
 
-	return &pb.UserList{
-		Users: s.users,
-	}, nil
-}
-
-func (s *UserService) GetUserById(
-	ctx context.Context,
-	req *pb.UserIdRequest,
-) (*pb.User, error) {
-
-	for _, user := range s.users {
-		if user.Id == req.Id {
-			return user, nil
-		}
+	user := &entity.User{
+		Name:  req.Name,
+        Email: req.Email,
 	}
 
-	return nil, status.Errorf(
-		codes.NotFound,
-		"user with id %d not found",
-		req.Id,
-	)
+	if err := s.userRepository.Create(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s *UserService) GetUserById(ctx context.Context, id int) (*entity.User, error) {
+    return s.userRepository.GetUserByID(ctx, id)
 }
